@@ -74,29 +74,29 @@ export function AgentList({ refreshTrigger, onQueryAgent }: AgentListProps) {
   return (
     <div>
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="bg-zinc-900 border border-zinc-800 mb-6">
+        <TabsList className="bg-zinc-900 border border-zinc-800 mb-4 sm:mb-6 w-full sm:w-auto">
           <TabsTrigger 
             value="all" 
-            className="data-[state=active]:bg-zinc-800 data-[state=active]:text-zinc-100"
+            className="data-[state=active]:bg-zinc-800 data-[state=active]:text-zinc-100 text-xs sm:text-sm px-3 sm:px-4 py-2"
           >
             All Agents
-            <span className="ml-2 px-2 py-0.5 rounded-full bg-zinc-800 text-xs text-zinc-400">
+            <span className="ml-1.5 sm:ml-2 px-1.5 sm:px-2 py-0.5 rounded-full bg-zinc-800 text-[10px] sm:text-xs text-zinc-400">
               {agents.length}
             </span>
           </TabsTrigger>
           <TabsTrigger 
             value="mine"
-            className="data-[state=active]:bg-zinc-800 data-[state=active]:text-zinc-100"
+            className="data-[state=active]:bg-zinc-800 data-[state=active]:text-zinc-100 text-xs sm:text-sm px-3 sm:px-4 py-2"
           >
             My Agents
-            <span className="ml-2 px-2 py-0.5 rounded-full bg-zinc-800 text-xs text-zinc-400">
+            <span className="ml-1.5 sm:ml-2 px-1.5 sm:px-2 py-0.5 rounded-full bg-zinc-800 text-[10px] sm:text-xs text-zinc-400">
               {myAgents.length}
             </span>
           </TabsTrigger>
         </TabsList>
 
         <TabsContent value="all" className="mt-0">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-4">
             {agents.map((agent) => (
               <AgentCard
                 key={agent.id.toString()}
@@ -110,7 +110,7 @@ export function AgentList({ refreshTrigger, onQueryAgent }: AgentListProps) {
 
         <TabsContent value="mine" className="mt-0">
           {myAgents.length > 0 ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-4">
               {myAgents.map((agent) => (
                 <AgentCard
                   key={agent.id.toString()}

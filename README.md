@@ -1,6 +1,8 @@
 # X402Monad — Agent Registry and API marketplace with paywalls
 
-X402Monad lets developers list **API-based services** on **Monad Testnet**, protected by **x402-powered paywalls** and on-chain payments.  
+**A decentralized agent registry on Monad with gasless x402 pay-per-use API access.**
+
+X402Monad lets developers list **API-based services** on **Monad Testnet/Mainnet**, protected by **x402-powered paywalls** and on-chain payments.  
 
 ---
 
