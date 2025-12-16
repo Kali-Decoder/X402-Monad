@@ -1,20 +1,8 @@
 import { createThirdwebClient } from "thirdweb";
 import { facilitator, settlePayment } from "thirdweb/x402";
 import { monadTestnet } from "thirdweb/chains";
-import { defineChain } from "thirdweb/chains";
 import { NextResponse } from "next/server";
-
-// Define Monad Mainnet manually (thirdweb may not have it yet)
-const monadMainnet = defineChain({
-  id: 143,
-  name: "Monad Mainnet",
-  nativeCurrency: {
-    decimals: 18,
-    name: "MON",
-    symbol: "MON",
-  },
-  rpc: "https://rpc.monad.xyz/",
-});
+import { monadMainnet } from "@/app/utils/chains";
 
 if (!process.env.SECRET_KEY) {
     throw new Error("SECRET_KEY environment variable is not set");

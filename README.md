@@ -43,6 +43,7 @@ cp .env.example .env # configure your .env file
 # - NEXT_PUBLIC_CLIENT_ID (Thirdweb client ID)
 # - SECRET_KEY (Thirdweb secret key)
 # - SERVER_WALLET (Server wallet address for receiving payments)
+# - RAPIDAPI_KEY (RapidAPI key for Twitter API access)
 pnpm run dev
 ```
 Runs the web app at http://localhost:3000

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useAccount, useWriteContract, useWaitForTransactionReceipt } from "wagmi";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -8,6 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Card } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
+import { Select } from "@/components/ui/select";
 import { S8004_ABI } from "../app/contracts";
 import { useNetwork } from "../app/contexts/NetworkContext";
 import { Loader2, Plus } from "lucide-react";
@@ -22,6 +23,9 @@ export function RegisterAgentForm({ onSuccess }: RegisterAgentFormProps) {
   const { writeContract, data: hash, isPending } = useWriteContract();
   const { isLoading: isConfirming } = useWaitForTransactionReceipt({ hash });
 
+  const [endpoints, setEndpoints] = useState<string[]>([]);
+  const [endpointsLoading, setEndpointsLoading] = useState(true);
+
   const [formData, setFormData] = useState({
     type: "",
     name: "",
@@ -32,6 +36,27 @@ export function RegisterAgentForm({ onSuccess }: RegisterAgentFormProps) {
     tasks: "",
     isX402enabled: false,
   });
+
+  // Fetch available endpoints on mount
+  useEffect(() => {
+    const fetchEndpoints = async () => {
+      try {
+        const response = await fetch("/api/endpoints");
+        const data = await response.json();
+        if (data.endpoints && Array.isArray(data.endpoints)) {
+          setEndpoints(data.endpoints);
+        }
+      } catch (error) {
+        console.error("Error fetching endpoints:", error);
+        // Fallback to known endpoints
+        setEndpoints(["/api/premium", "/api/twitter"]);
+      } finally {
+        setEndpointsLoading(false);
+      }
+    };
+
+    fetchEndpoints();
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -136,17 +161,28 @@ export function RegisterAgentForm({ onSuccess }: RegisterAgentFormProps) {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
             <div className="space-y-2">
               <Label htmlFor="endpoint" className="text-sm text-zinc-300">
-                Endpoint URL
+                Endpoint
               </Label>
-              <Input
-                id="endpoint"
-                type="url"
-                value={formData.endpoint}
-                onChange={(e) => setFormData({ ...formData, endpoint: e.target.value })}
-                placeholder="https://api.example.com/agent"
-                className="bg-zinc-900 border-zinc-800 text-zinc-100 placeholder:text-zinc-600"
-                required
-              />
+              {endpointsLoading ? (
+                <div className="flex h-9 w-full items-center px-3 text-sm text-zinc-500 bg-zinc-900 border border-zinc-800 rounded-md">
+                  Loading endpoints...
+                </div>
+              ) : (
+                <Select
+                  id="endpoint"
+                  value={formData.endpoint}
+                  onChange={(e) => setFormData({ ...formData, endpoint: e.target.value })}
+                  className="bg-zinc-900 border-zinc-800 text-zinc-100 focus:ring-zinc-700"
+                  required
+                >
+                  <option value="">Select an endpoint</option>
+                  {endpoints.map((endpoint) => (
+                    <option key={endpoint} value={endpoint} className="bg-zinc-900">
+                      {endpoint}
+                    </option>
+                  ))}
+                </Select>
+              )}
             </div>
 
             <div className="space-y-2">
