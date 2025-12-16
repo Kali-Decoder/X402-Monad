@@ -1,3 +1,4 @@
+@import url('https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,100..900;1,100..900&family=Science+Gothic:wght@100..900&display=swap');
 @import "tailwindcss";
 
 @theme {
@@ -27,6 +28,13 @@
   body {
     background-color: var(--color-background);
     color: var(--color-foreground);
+    font-family: 'Montserrat', 'Science Gothic', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+  
+  h1, h2, h3, h4, h5, h6 {
+    font-family: 'Science Gothic', 'Montserrat', sans-serif;
   }
 }
 

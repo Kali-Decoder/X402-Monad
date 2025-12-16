@@ -5,10 +5,12 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Agent } from "../app/contracts";
 import { Loader2, X, ExternalLink, Wallet, Zap, CheckCircle2 } from "lucide-react";
-import { useAccount } from "wagmi";
+import { useAccount, useReadContract } from "wagmi";
 import { createThirdwebClient } from "thirdweb";
 import { wrapFetchWithPayment } from "thirdweb/x402";
 import { createWallet } from "thirdweb/wallets";
+import { useNetwork } from "../app/contexts/NetworkContext";
+import { formatUnits } from "viem";
 
 const client = createThirdwebClient({
   clientId: process.env.NEXT_PUBLIC_CLIENT_ID || "YOUR_PUBLIC_CLIENT_ID",
@@ -24,11 +26,56 @@ interface QueryScreenProps {
 
 type PaymentState = "idle" | "connecting" | "paying" | "success" | "error";
 
+// ERC20 ABI for balanceOf
+const ERC20_ABI = [
+  {
+    inputs: [{ internalType: "address", name: "account", type: "address" }],
+    name: "balanceOf",
+    outputs: [{ internalType: "uint256", name: "", type: "uint256" }],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [],
+    name: "decimals",
+    outputs: [{ internalType: "uint8", name: "", type: "uint8" }],
+    stateMutability: "view",
+    type: "function",
+  },
+] as const;
+
 export function QueryScreen({ agent, onClose }: QueryScreenProps) {
-  const { isConnected } = useAccount();
+  const { isConnected, address } = useAccount();
+  const { mode, usdcAddress } = useNetwork();
   const [paymentState, setPaymentState] = useState<PaymentState>("idle");
   const [response, setResponse] = useState<any>(null);
   const [error, setError] = useState<string | null>(null);
+
+  // Fetch USDC balance
+  const { data: usdcBalance, isLoading: isLoadingBalance } = useReadContract({
+    address: usdcAddress as `0x${string}`,
+    abi: ERC20_ABI,
+    functionName: "balanceOf",
+    args: address ? [address] : undefined,
+    query: {
+      enabled: !!address && isConnected,
+    },
+  });
+
+  // Fetch USDC decimals
+  const { data: decimals } = useReadContract({
+    address: usdcAddress as `0x${string}`,
+    abi: ERC20_ABI,
+    functionName: "decimals",
+    query: {
+      enabled: !!usdcAddress,
+    },
+  });
+
+  // Format USDC balance
+  const formattedBalance = usdcBalance && decimals
+    ? parseFloat(formatUnits(usdcBalance, decimals)).toFixed(6)
+    : "0.000000";
 
   const payAndFetch = async () => {
     // Check if wallet is connected via wagmi first
@@ -53,7 +100,8 @@ export function QueryScreen({ agent, onClose }: QueryScreenProps) {
       const fetchPay = wrapFetchWithPayment(fetch, client, wallet);
 
       // Call the premium route directly - this is our endpoint
-      const queryUrl = `/api/premium`;
+      // Pass network mode as query parameter
+      const queryUrl = `/api/premium?network=${mode}`;
       const res = await fetchPay(queryUrl); // relative URL = no CORS
       
       // Always parse the response as JSON, whether it's success or error
@@ -83,7 +131,7 @@ export function QueryScreen({ agent, onClose }: QueryScreenProps) {
 
   return (
     <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-      <Card className="bg-zinc-900 border-zinc-800 w-full max-w-2xl max-h-[90vh] overflow-hidden flex flex-col">
+      <Card className="bg-zinc-900 border-zinc-800 w-full max-w-6xl max-h-[90vh] overflow-hidden flex flex-col">
         <div className="p-6 border-b border-zinc-800 flex items-center justify-between">
           <div className="flex items-center gap-3">
             {agent.image ? (
@@ -114,22 +162,90 @@ export function QueryScreen({ agent, onClose }: QueryScreenProps) {
           </Button>
         </div>
 
-        <div className="p-6 overflow-y-auto flex-1">
-          <div className="space-y-4">
-            {/* Payment Amount Display */}
-            {paymentState === "idle" && (
-              <div className="p-6 rounded-lg bg-gradient-to-br from-zinc-800 to-zinc-900 border border-zinc-700 text-center">
-                <div className="flex items-center justify-center mb-3">
-                  <div className="w-16 h-16 rounded-full bg-zinc-700/50 flex items-center justify-center border-2 border-zinc-600">
-                    <Zap className="w-8 h-8 text-zinc-300" />
+        <div className="flex flex-1 overflow-hidden">
+          {/* Left Side - Payment Controls */}
+          <div className="w-1/2 border-r border-zinc-800 p-6 overflow-y-auto">
+            <div className="space-y-6">
+            {/* Code Block Style Payment Info */}
+            <div>
+              <h3 className="text-lg font-semibold text-zinc-100 mb-4">
+                → Accept payments with a single line of code
+              </h3>
+              
+              <div className="relative bg-zinc-950 border border-zinc-800 rounded-lg overflow-hidden">
+                <div className="absolute top-3 right-3">
+                  <span className="text-xs text-zinc-600 bg-zinc-900 px-2 py-1 rounded">6</span>
+                </div>
+                <div className="p-4 font-mono text-sm">
+                  <div className="text-zinc-500 mb-2">
+                    <span className="text-zinc-400">const</span> fetchPay ={' '}
+                    <span className="text-zinc-300">wrapFetchWithPayment</span>(
+                    <br />
+                    <span className="ml-4">fetch, client, wallet</span>
+                    <br />
+                    );
+                  </div>
+                  <div className="text-zinc-500">
+                    <span className="text-zinc-400">const</span> res ={' '}
+                    <span className="text-zinc-300">await</span> fetchPay(
+                    <br />
+                    <span className="ml-4 text-zinc-200">"/api/premium"</span>
+                    <br />
+                    );
                   </div>
                 </div>
-                <h3 className="text-xl font-bold text-zinc-100 mb-1">
-                  {PAYMENT_AMOUNT} {PAYMENT_TOKEN}
-                </h3>
-                <p className="text-sm text-zinc-400">
-                  Zero gas fees on Monad Testnet
-                </p>
+              </div>
+              
+              <p className="text-sm text-zinc-400 mt-4 leading-relaxed">
+                That's it. Add one line of code to require payment for each incoming request. 
+                If a request arrives without payment, the server responds with HTTP 402, 
+                prompting the client to pay and retry.
+              </p>
+            </div>
+
+            {/* USDC Balance Display */}
+            {isConnected && (
+              <div className="p-4 rounded-lg bg-zinc-800/50 border border-zinc-700">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-xs text-zinc-500 mb-1">Your {PAYMENT_TOKEN} Balance</p>
+                    {isLoadingBalance ? (
+                      <div className="flex items-center gap-2">
+                        <Loader2 className="w-4 h-4 animate-spin text-zinc-400" />
+                        <p className="text-sm text-zinc-400">Loading...</p>
+                      </div>
+                    ) : (
+                      <p className="text-lg font-semibold text-zinc-100">
+                        {formattedBalance} {PAYMENT_TOKEN}
+                      </p>
+                    )}
+                  </div>
+                  <div className="w-10 h-10 rounded-lg bg-zinc-700/50 flex items-center justify-center border border-zinc-600">
+                    <Wallet className="w-5 h-5 text-zinc-300" />
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Payment Amount Display */}
+            {paymentState === "idle" && (
+              <div className="p-6 rounded-lg bg-zinc-800/50 border border-zinc-700">
+                <div className="flex items-center justify-between mb-4">
+                  <div>
+                    <p className="text-sm text-zinc-400 mb-1">Payment Amount</p>
+                    <p className="text-2xl font-bold text-zinc-100">
+                      {PAYMENT_AMOUNT} {PAYMENT_TOKEN}
+                    </p>
+                  </div>
+                  <div className="w-12 h-12 rounded-lg bg-zinc-700/50 flex items-center justify-center border border-zinc-600">
+                    <Zap className="w-6 h-6 text-zinc-300" />
+                  </div>
+                </div>
+                <div className="pt-4 border-t border-zinc-700">
+                  <p className="text-xs text-zinc-500">
+                    Zero gas fees on {mode === "dev" ? "Monad Testnet" : "Monad Mainnet"}
+                  </p>
+                </div>
               </div>
             )}
 
@@ -190,8 +306,12 @@ export function QueryScreen({ agent, onClose }: QueryScreenProps) {
             )}
 
             <div className="p-4 rounded-lg bg-zinc-800/50 border border-zinc-700">
-              <p className="text-sm text-zinc-400 mb-2">API Route:</p>
-              <p className="text-xs text-zinc-500 font-mono break-all">/api/premium</p>
+              <p className="text-sm text-zinc-400 mb-2">Endpoint:</p>
+              <div className="bg-zinc-950 border border-zinc-800 rounded p-3">
+                <p className="text-xs text-zinc-300 font-mono break-all">
+                  GET /api/premium
+                </p>
+              </div>
             </div>
 
             {paymentState === "idle" && (
@@ -200,7 +320,7 @@ export function QueryScreen({ agent, onClose }: QueryScreenProps) {
                 className="w-full bg-zinc-100 hover:bg-zinc-200 text-black font-medium h-12 text-base"
               >
                 <ExternalLink className="w-5 h-5 mr-2" />
-                Pay {PAYMENT_AMOUNT} {PAYMENT_TOKEN} & Query Agent
+                Pay {PAYMENT_AMOUNT} {PAYMENT_TOKEN} & Query API
               </Button>
             )}
 
@@ -248,56 +368,83 @@ export function QueryScreen({ agent, onClose }: QueryScreenProps) {
               </div>
             )}
 
-            {/* Show additional success details if available */}
-            {response && paymentState === "success" && (
-              <div className="space-y-4">
-                {response.tx && (
-                  <div className="p-4 rounded-lg bg-zinc-800/50 border border-zinc-700">
-                    <p className="text-zinc-300 font-semibold mb-2">Transaction</p>
-                    <p className="text-xs text-zinc-400 font-mono break-all">
-                      {response.tx}
-                    </p>
-                  </div>
-                )}
-
-                {response.message && (
-                  <div className="p-4 rounded-lg bg-zinc-800/50 border border-zinc-700">
-                    <p className="text-zinc-300 font-semibold mb-1">Message</p>
-                    <p className="text-zinc-400 text-sm">{response.message}</p>
-                  </div>
-                )}
-              </div>
-            )}
-
-          </div>
-        </div>
-
-        {/* JSON Response Display at Bottom - Shows All JSON */}
-        {response && (
-          <div className="border-t border-zinc-800 p-4 bg-zinc-950">
-            <div className="p-4 rounded-lg border bg-zinc-900/50 border-zinc-800">
-              <div className="flex items-center justify-between mb-3">
-                <p className="text-sm font-semibold flex items-center gap-2 text-zinc-300">
-                  <ExternalLink className="w-4 h-4" />
-                  {response.error || paymentState === "error" ? "Error Response (Full JSON)" : "Success Response (Full JSON)"}
-                </p>
-                <button
-                  onClick={() => {
-                    navigator.clipboard.writeText(JSON.stringify(response, null, 2));
-                  }}
-                  className="text-xs px-2 py-1 rounded bg-zinc-800 hover:bg-zinc-700 text-zinc-300 transition-colors"
-                >
-                  Copy JSON
-                </button>
-              </div>
-              <div className="rounded bg-zinc-950 border border-zinc-800 overflow-auto" style={{ maxHeight: '400px' }}>
-                <pre className="text-xs p-4 whitespace-pre-wrap font-mono text-zinc-300">
-                  {JSON.stringify(response, null, 2)}
-                </pre>
-              </div>
             </div>
           </div>
-        )}
+
+          {/* Right Side - Response Display */}
+          <div className="w-1/2 p-6 overflow-y-auto bg-zinc-950">
+            <div className="h-full flex flex-col">
+              <div className="mb-4">
+                <h3 className="text-lg font-semibold text-zinc-100 mb-2">Response</h3>
+                <p className="text-xs text-zinc-500">API response will appear here</p>
+              </div>
+
+              {response ? (
+                <div className="flex-1 flex flex-col">
+                  <div className="flex items-center justify-between mb-3">
+                    <p className={`text-sm font-semibold flex items-center gap-2 ${
+                      response.error || paymentState === "error"
+                        ? "text-zinc-300"
+                        : "text-zinc-300"
+                    }`}>
+                      <ExternalLink className="w-4 h-4" />
+                      {response.error || paymentState === "error" ? "Error Response" : "Success Response"}
+                    </p>
+                    <button
+                      onClick={() => {
+                        navigator.clipboard.writeText(JSON.stringify(response, null, 2));
+                      }}
+                      className="text-xs px-2 py-1 rounded bg-zinc-800 hover:bg-zinc-700 text-zinc-300 transition-colors"
+                    >
+                      Copy JSON
+                    </button>
+                  </div>
+                  
+                  <div className="flex-1 rounded bg-zinc-900 border border-zinc-800 overflow-auto">
+                    <pre className={`text-xs p-4 whitespace-pre-wrap font-mono ${
+                      response.error || paymentState === "error"
+                        ? "text-zinc-300"
+                        : "text-zinc-300"
+                    }`}>
+                      {JSON.stringify(response, null, 2)}
+                    </pre>
+                  </div>
+
+                  {/* Additional success details */}
+                  {paymentState === "success" && (
+                    <div className="mt-4 space-y-3">
+                      {response.tx && (
+                        <div className="p-3 rounded-lg bg-zinc-800/50 border border-zinc-700">
+                          <p className="text-zinc-300 font-semibold mb-1 text-xs">Transaction</p>
+                          <p className="text-xs text-zinc-400 font-mono break-all">
+                            {response.tx}
+                          </p>
+                        </div>
+                      )}
+
+                      {response.message && (
+                        <div className="p-3 rounded-lg bg-zinc-800/50 border border-zinc-700">
+                          <p className="text-zinc-300 font-semibold mb-1 text-xs">Message</p>
+                          <p className="text-zinc-400 text-xs">{response.message}</p>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <div className="flex-1 flex items-center justify-center">
+                  <div className="text-center">
+                    <div className="w-16 h-16 rounded-lg bg-zinc-800/50 border border-zinc-700 flex items-center justify-center mx-auto mb-3">
+                      <ExternalLink className="w-8 h-8 text-zinc-600" />
+                    </div>
+                    <p className="text-sm text-zinc-500">No response yet</p>
+                    <p className="text-xs text-zinc-600 mt-1">Response will appear here after payment</p>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
       </Card>
     </div>
   );

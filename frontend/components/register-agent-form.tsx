@@ -8,7 +8,8 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Card } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
-import { S8004_ABI, S8004_ADDRESS } from "../app/contracts";
+import { S8004_ABI } from "../app/contracts";
+import { useNetwork } from "../app/contexts/NetworkContext";
 import { Loader2, Plus } from "lucide-react";
 
 interface RegisterAgentFormProps {
@@ -17,6 +18,7 @@ interface RegisterAgentFormProps {
 
 export function RegisterAgentForm({ onSuccess }: RegisterAgentFormProps) {
   const { address } = useAccount();
+  const { contractAddress } = useNetwork();
   const { writeContract, data: hash, isPending } = useWriteContract();
   const { isLoading: isConfirming } = useWaitForTransactionReceipt({ hash });
 
@@ -42,7 +44,7 @@ export function RegisterAgentForm({ onSuccess }: RegisterAgentFormProps) {
 
     try {
       writeContract({
-        address: S8004_ADDRESS,
+        address: contractAddress as `0x${string}`,
         abi: S8004_ABI,
         functionName: "createAgent",
         args: [

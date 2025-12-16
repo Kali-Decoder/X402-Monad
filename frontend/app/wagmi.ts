@@ -1,10 +1,10 @@
 import { http, createConfig } from 'wagmi';
-import { monadTestnet } from './contracts';
+import { monadTestnet, monadMainnet } from './contracts';
 import { injected, walletConnect } from 'wagmi/connectors';
 
-// Configure wagmi client
+// Configure wagmi client with both networks
 export const config = createConfig({
-  chains: [monadTestnet],
+  chains: [monadTestnet, monadMainnet],
   connectors: [
     injected(),
     walletConnect({
@@ -13,5 +13,6 @@ export const config = createConfig({
   ],
   transports: {
     [monadTestnet.id]: http(),
+    [monadMainnet.id]: http(),
   },
 });

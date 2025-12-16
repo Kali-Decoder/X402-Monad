@@ -24,8 +24,8 @@ export function AgentCard({ agent, isOwner, onQuery }: AgentCardProps) {
   };
 
   return (
-    <Card className="bg-zinc-900/50 border-zinc-800 overflow-hidden hover:border-zinc-700 transition-all duration-200">
-      <div className="p-6">
+    <Card className="bg-zinc-900/50 border-zinc-800 overflow-hidden hover:border-zinc-700 transition-all duration-200 w-full h-full flex flex-col">
+      <div className="p-6 flex-1 flex flex-col">
         <div className="flex items-start justify-between mb-4">
           <div className="flex items-start gap-3 flex-1">
             {agent.image ? (
@@ -41,23 +41,23 @@ export function AgentCard({ agent, isOwner, onQuery }: AgentCardProps) {
                 </span>
               </div>
             )}
-            <div className="flex-1 min-w-0">
+            <div className="flex-1 min-w-0 overflow-hidden">
               <div className="flex items-center gap-2 mb-1">
-                <h3 className="text-base font-semibold text-zinc-100 truncate">
+                <h3 className="text-base font-semibold text-zinc-100 truncate flex-1 min-w-0">
                   {agent.name}
                 </h3>
                 {isOwner && (
-                  <Badge variant="secondary" className="bg-zinc-800 text-zinc-300 text-xs">
+                  <Badge variant="secondary" className="bg-zinc-800 text-zinc-300 text-xs flex-shrink-0">
                     Owner
                   </Badge>
                 )}
               </div>
-              <p className="text-sm text-zinc-500">ID: #{agent.id.toString()}</p>
+              <p className="text-sm text-zinc-500 truncate">ID: #{agent.id.toString()}</p>
             </div>
           </div>
         </div>
 
-        <p className="text-sm text-zinc-400 mb-4 line-clamp-2">
+        <p className="text-sm text-zinc-400 mb-4 line-clamp-2 flex-shrink-0">
           {agent.description}
         </p>
 
@@ -96,14 +96,14 @@ export function AgentCard({ agent, isOwner, onQuery }: AgentCardProps) {
           </div>
         )}
 
-        <div className="pt-4 border-t border-zinc-800 flex items-center justify-between">
-          <p className="text-xs text-zinc-500">
+        <div className="pt-4 border-t border-zinc-800 flex items-center justify-between mt-auto">
+          <p className="text-xs text-zinc-500 truncate flex-1 min-w-0 mr-2">
             {formatAddress(agent.owner)}
           </p>
           <Button
             onClick={handleQuery}
             size="sm"
-            className="bg-zinc-800 hover:bg-zinc-700 text-zinc-100"
+            className="bg-zinc-800 hover:bg-zinc-700 text-zinc-100 flex-shrink-0"
           >
             <ExternalLink className="w-3.5 h-3.5 mr-1.5" />
             Query

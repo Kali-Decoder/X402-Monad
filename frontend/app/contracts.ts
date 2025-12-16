@@ -1,4 +1,5 @@
 import { defineChain } from 'viem';
+
 export const monadTestnet = defineChain({
   id: 10143,
   name: 'Monad Testnet',
@@ -21,8 +22,36 @@ export const monadTestnet = defineChain({
   testnet: true,
 });
 
+export const monadMainnet = defineChain({
+  id: 143,
+  name: 'Monad Mainnet',
+  nativeCurrency: {
+    decimals: 18,
+    name: 'MON',
+    symbol: 'MON',
+  },
+  rpcUrls: {
+    default: {
+      http: ['https://rpc.monad.xyz/'],
+    },
+    public: {
+      http: ['https://rpc.monad.xyz/'],
+    },
+  },
+  blockExplorers: {
+    default: { name: 'Explorer', url: 'https://monadexplorer.com/' },
+  },
+  testnet: false,
+});
+
 // Contract Configuration
-export const S8004_ADDRESS = '0x0A95c430Bf6AA3140A4Bf04C8D5982472331008d' as const;
+// Testnet contract address
+export const S8004_ADDRESS_TESTNET = '0x0A95c430Bf6AA3140A4Bf04C8D5982472331008d' as const;
+// Mainnet contract address (update when deployed)
+export const S8004_ADDRESS_MAINNET = '0x0A95c430Bf6AA3140A4Bf04C8D5982472331008d' as const;
+
+// Default to testnet for now
+export const S8004_ADDRESS = S8004_ADDRESS_TESTNET;
 
 export const S8004_ABI = [
   {

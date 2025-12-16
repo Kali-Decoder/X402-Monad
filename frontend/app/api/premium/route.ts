@@ -1,7 +1,20 @@
 import { createThirdwebClient } from "thirdweb";
 import { facilitator, settlePayment } from "thirdweb/x402";
 import { monadTestnet } from "thirdweb/chains";
+import { defineChain } from "thirdweb/chains";
 import { NextResponse } from "next/server";
+
+// Define Monad Mainnet manually (thirdweb may not have it yet)
+const monadMainnet = defineChain({
+  id: 143,
+  name: "Monad Mainnet",
+  nativeCurrency: {
+    decimals: 18,
+    name: "MON",
+    symbol: "MON",
+  },
+  rpc: "https://rpc.monad.xyz/",
+});
 
 if (!process.env.SECRET_KEY) {
     throw new Error("SECRET_KEY environment variable is not set");
@@ -22,14 +35,20 @@ export async function GET(request: Request) {
         // Use this API route itself as the resource URL
         const resourceUrl = request.url;
 
+        // Get network mode from query parameter (defaults to testnet for dev mode)
+        const { searchParams } = new URL(request.url);
+        const networkMode = searchParams.get("network") || "dev";
+        const network = networkMode === "main" ? monadMainnet : monadTestnet;
+
         const paymentData = request.headers.get("x-payment");
         console.log("paymentData", paymentData);
+        console.log("networkMode", networkMode, "network", network.name);
 
         const result = await settlePayment({
             resourceUrl: resourceUrl,
             method: "GET",
             paymentData: paymentData,
-            network: monadTestnet, // payable on monad testnet
+            network: network, // payable on monad testnet or mainnet
             price: "$0.0001", // Amount per request
             payTo: process.env.SERVER_WALLET!, // payment receiver
             facilitator: twFacilitator,

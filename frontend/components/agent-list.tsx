@@ -3,7 +3,8 @@
 import { useState, useEffect } from 'react';
 import { useAccount, useReadContract } from 'wagmi';
 import { AgentCard } from './agent-card';
-import { Agent, S8004_ADDRESS, S8004_ABI } from '../app/contracts';
+import { Agent, S8004_ABI } from '../app/contracts';
+import { useNetwork } from '../app/contexts/NetworkContext';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Loader2 } from 'lucide-react';
 
@@ -14,16 +15,17 @@ interface AgentListProps {
 
 export function AgentList({ refreshTrigger, onQueryAgent }: AgentListProps) {
   const { address } = useAccount();
+  const { contractAddress } = useNetwork();
   const [activeTab, setActiveTab] = useState('all');
 
   const { data: allAgents, isLoading: loadingAll, refetch: refetchAll } = useReadContract({
-    address: S8004_ADDRESS,
+    address: contractAddress as `0x${string}`,
     abi: S8004_ABI,
     functionName: 'listAgents',
   });
 
   const { data: userAgentIds, isLoading: loadingUser, refetch: refetchUser } = useReadContract({
-    address: S8004_ADDRESS,
+    address: contractAddress as `0x${string}`,
     abi: S8004_ABI,
     functionName: 'listUserAgents',
     args: address ? [address] : undefined,
