@@ -1,0 +1,136 @@
+'use client';
+
+import { useState, useEffect } from 'react';
+import { useAccount, useReadContract } from 'wagmi';
+import { AgentCard } from './agent-card';
+import { Agent, S8004_ADDRESS, S8004_ABI } from '../app/contracts';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Loader2 } from 'lucide-react';
+
+interface AgentListProps {
+  refreshTrigger: number;
+  onQueryAgent?: (agent: Agent) => void;
+}
+
+export function AgentList({ refreshTrigger, onQueryAgent }: AgentListProps) {
+  const { address } = useAccount();
+  const [activeTab, setActiveTab] = useState('all');
+
+  const { data: allAgents, isLoading: loadingAll, refetch: refetchAll } = useReadContract({
+    address: S8004_ADDRESS,
+    abi: S8004_ABI,
+    functionName: 'listAgents',
+  });
+
+  const { data: userAgentIds, isLoading: loadingUser, refetch: refetchUser } = useReadContract({
+    address: S8004_ADDRESS,
+    abi: S8004_ABI,
+    functionName: 'listUserAgents',
+    args: address ? [address] : undefined,
+  });
+
+  useEffect(() => {
+    if (refreshTrigger > 0) {
+      refetchAll();
+      refetchUser();
+    }
+  }, [refreshTrigger, refetchAll, refetchUser]);
+
+  const agents = (allAgents as Agent[]) || [];
+  const userAgentIdSet = new Set(
+    (userAgentIds as bigint[])?.map((id) => id.toString()) || []
+  );
+
+  const myAgents = agents.filter((agent) =>
+    userAgentIdSet.has(agent.id.toString())
+  );
+
+  const isLoading = loadingAll || loadingUser;
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center py-16">
+        <Loader2 className="w-8 h-8 animate-spin text-zinc-600" />
+      </div>
+    );
+  }
+
+  if (!agents || agents.length === 0) {
+    return (
+      <div className="text-center py-16">
+        <div className="w-16 h-16 rounded-full bg-zinc-900 mx-auto mb-4 flex items-center justify-center">
+          <span className="text-2xl">🤖</span>
+        </div>
+        <p className="text-zinc-400 mb-2">No agents registered yet</p>
+        <p className="text-sm text-zinc-600">
+          Be the first to register an autonomous agent
+        </p>
+      </div>
+    );
+  }
+
+  return (
+    <div>
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+        <TabsList className="bg-zinc-900 border border-zinc-800 mb-6">
+          <TabsTrigger 
+            value="all" 
+            className="data-[state=active]:bg-zinc-800 data-[state=active]:text-zinc-100"
+          >
+            All Agents
+            <span className="ml-2 px-2 py-0.5 rounded-full bg-zinc-800 text-xs text-zinc-400">
+              {agents.length}
+            </span>
+          </TabsTrigger>
+          <TabsTrigger 
+            value="mine"
+            className="data-[state=active]:bg-zinc-800 data-[state=active]:text-zinc-100"
+          >
+            My Agents
+            <span className="ml-2 px-2 py-0.5 rounded-full bg-zinc-800 text-xs text-zinc-400">
+              {myAgents.length}
+            </span>
+          </TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="all" className="mt-0">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {agents.map((agent) => (
+              <AgentCard
+                key={agent.id.toString()}
+                agent={agent}
+                isOwner={address?.toLowerCase() === agent.owner.toLowerCase()}
+                onQuery={onQueryAgent}
+              />
+            ))}
+          </div>
+        </TabsContent>
+
+        <TabsContent value="mine" className="mt-0">
+          {myAgents.length > 0 ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {myAgents.map((agent) => (
+                <AgentCard
+                  key={agent.id.toString()}
+                  agent={agent}
+                  isOwner={true}
+                  onQuery={onQueryAgent}
+                />
+              ))}
+            </div>
+          ) : (
+            <div className="text-center py-16">
+              <div className="w-16 h-16 rounded-full bg-zinc-900 mx-auto mb-4 flex items-center justify-center">
+                <span className="text-2xl">📝</span>
+              </div>
+              <p className="text-zinc-400 mb-2">You haven't registered any agents yet</p>
+              <p className="text-sm text-zinc-600">
+                Create your first agent using the form above
+              </p>
+            </div>
+          )}
+        </TabsContent>
+      </Tabs>
+    </div>
+  );
+}
