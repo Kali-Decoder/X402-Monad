@@ -130,53 +130,53 @@ export function QueryScreen({ agent, onClose }: QueryScreenProps) {
   };
 
   return (
-    <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-      <Card className="bg-zinc-900 border-zinc-800 w-full max-w-6xl max-h-[90vh] overflow-hidden flex flex-col">
-        <div className="p-6 border-b border-zinc-800 flex items-center justify-between">
-          <div className="flex items-center gap-3">
+    <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-2 sm:p-4">
+      <Card className="bg-zinc-900 border-zinc-800 w-full max-w-6xl max-h-[95vh] sm:max-h-[90vh] overflow-hidden flex flex-col">
+        <div className="p-4 sm:p-6 border-b border-zinc-800 flex items-center justify-between gap-2">
+          <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1">
             {agent.image ? (
               <img
                 src={agent.image}
                 alt={agent.name}
-                className="w-10 h-10 rounded-lg object-cover border border-zinc-800"
+                className="w-8 h-8 sm:w-10 sm:h-10 rounded-lg object-cover border border-zinc-800 flex-shrink-0"
               />
             ) : (
-              <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-zinc-800 to-zinc-900 flex items-center justify-center border border-zinc-800">
-                <span className="text-zinc-400 font-semibold">
+              <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-lg bg-gradient-to-br from-zinc-800 to-zinc-900 flex items-center justify-center border border-zinc-800 flex-shrink-0">
+                <span className="text-zinc-400 font-semibold text-xs sm:text-sm">
                   {agent.name.charAt(0).toUpperCase()}
                 </span>
               </div>
             )}
-            <div>
-              <h2 className="text-lg font-semibold text-zinc-100">{agent.name}</h2>
-              <p className="text-sm text-zinc-500">Query Agent</p>
+            <div className="min-w-0">
+              <h2 className="text-base sm:text-lg font-semibold text-zinc-100 truncate">{agent.name}</h2>
+              <p className="text-xs sm:text-sm text-zinc-500">Query Agent</p>
             </div>
           </div>
           <Button
             onClick={onClose}
             variant="ghost"
             size="icon"
-            className="text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800"
+            className="text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800 flex-shrink-0 h-8 w-8 sm:h-10 sm:w-10"
           >
-            <X className="w-5 h-5" />
+            <X className="w-4 h-4 sm:w-5 sm:h-5" />
           </Button>
         </div>
 
-        <div className="flex flex-1 overflow-hidden">
+        <div className="flex flex-col lg:flex-row flex-1 overflow-hidden">
           {/* Left Side - Payment Controls */}
-          <div className="w-1/2 border-r border-zinc-800 p-6 overflow-y-auto">
+          <div className="w-full lg:w-1/2 border-b lg:border-b-0 lg:border-r border-zinc-800 p-4 sm:p-6 overflow-y-auto max-h-[50vh] lg:max-h-none">
             <div className="space-y-6">
             {/* Code Block Style Payment Info */}
             <div>
-              <h3 className="text-lg font-semibold text-zinc-100 mb-4">
+              <h3 className="text-base sm:text-lg font-semibold text-zinc-100 mb-3 sm:mb-4">
                 → Accept payments with a single line of code
               </h3>
               
               <div className="relative bg-zinc-950 border border-zinc-800 rounded-lg overflow-hidden">
-                <div className="absolute top-3 right-3">
-                  <span className="text-xs text-zinc-600 bg-zinc-900 px-2 py-1 rounded">6</span>
+                <div className="absolute top-2 right-2 sm:top-3 sm:right-3">
+                  <span className="text-[10px] sm:text-xs text-zinc-600 bg-zinc-900 px-1.5 sm:px-2 py-0.5 sm:py-1 rounded">6</span>
                 </div>
-                <div className="p-4 font-mono text-sm">
+                <div className="p-3 sm:p-4 font-mono text-xs sm:text-sm overflow-x-auto">
                   <div className="text-zinc-500 mb-2">
                     <span className="text-zinc-400">const</span> fetchPay ={' '}
                     <span className="text-zinc-300">wrapFetchWithPayment</span>(
@@ -196,7 +196,7 @@ export function QueryScreen({ agent, onClose }: QueryScreenProps) {
                 </div>
               </div>
               
-              <p className="text-sm text-zinc-400 mt-4 leading-relaxed">
+              <p className="text-xs sm:text-sm text-zinc-400 mt-3 sm:mt-4 leading-relaxed">
                 That's it. Add one line of code to require payment for each incoming request. 
                 If a request arrives without payment, the server responds with HTTP 402, 
                 prompting the client to pay and retry.
@@ -372,7 +372,7 @@ export function QueryScreen({ agent, onClose }: QueryScreenProps) {
           </div>
 
           {/* Right Side - Response Display */}
-          <div className="w-1/2 p-6 overflow-y-auto bg-zinc-950">
+          <div className="w-full lg:w-1/2 p-4 sm:p-6 overflow-y-auto bg-zinc-950 max-h-[50vh] lg:max-h-none">
             <div className="h-full flex flex-col">
               <div className="mb-4">
                 <h3 className="text-lg font-semibold text-zinc-100 mb-2">Response</h3>

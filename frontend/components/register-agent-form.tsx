@@ -85,11 +85,11 @@ export function RegisterAgentForm({ onSuccess }: RegisterAgentFormProps) {
 
   return (
     <Card className="bg-zinc-900/50 border-zinc-800">
-      <div className="p-6">
-        <h2 className="text-lg font-semibold text-zinc-100 mb-6">Register New Agent</h2>
+      <div className="p-4 sm:p-6">
+        <h2 className="text-base sm:text-lg font-semibold text-zinc-100 mb-4 sm:mb-6">Register New Agent</h2>
         
-        <form onSubmit={handleSubmit} className="space-y-5">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+        <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-5">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-5">
             <div className="space-y-2">
               <Label htmlFor="name" className="text-sm text-zinc-300">
                 Agent Name

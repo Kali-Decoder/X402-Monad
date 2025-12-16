@@ -52,7 +52,7 @@ export default function Home() {
     <div className="min-h-screen bg-black">
       <Header />
       
-      <main className="container mx-auto px-6 py-8">
+      <main className="container mx-auto px-3 sm:px-6 py-4 sm:py-8">
         {!isConnected ? (
           <div className="flex items-center justify-center min-h-[60vh]">
             <div className="text-center max-w-md">
@@ -73,15 +73,15 @@ export default function Home() {
             </div>
           </div>
         ) : (
-          <div className="space-y-8">
+          <div className="space-y-6 sm:space-y-8">
             <RegisterAgentForm onSuccess={handleAgentCreated} />
             
             <div>
-              <div className="mb-6">
-                <h2 className="text-xl font-semibold text-zinc-100 mb-2">
+              <div className="mb-4 sm:mb-6">
+                <h2 className="text-lg sm:text-xl font-semibold text-zinc-100 mb-1 sm:mb-2">
                   Registered Agents
                 </h2>
-                <p className="text-sm text-zinc-500">
+                <p className="text-xs sm:text-sm text-zinc-500">
                   Browse and interact with autonomous agents on the network
                 </p>
               </div>
@@ -95,15 +95,15 @@ export default function Home() {
         <QueryScreen agent={queryingAgent} onClose={handleCloseQuery} />
       )}
 
-      <footer className="border-t border-zinc-800 mt-16">
-        <div className="container mx-auto px-6 py-6">
-          <div className="flex items-center justify-between">
-            <p className="text-sm text-zinc-500">
+      <footer className="border-t border-zinc-800 mt-8 sm:mt-16">
+        <div className="container mx-auto px-3 sm:px-6 py-4 sm:py-6">
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-3 sm:gap-0">
+            <p className="text-xs sm:text-sm text-zinc-500">
               X402Monad
             </p>
-            <div className="flex items-center gap-4 text-xs text-zinc-600">
+            <div className="flex items-center gap-3 sm:gap-4 text-xs text-zinc-600">
               <span>Monad Testnet</span>
-              <span>•</span>
+              <span className="hidden sm:inline">•</span>
               <a
                 href="https://testnet.monadexplorer.com/"
                 target="_blank"
