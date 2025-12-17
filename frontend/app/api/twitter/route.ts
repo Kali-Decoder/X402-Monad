@@ -22,21 +22,19 @@ const twFacilitator = facilitator({
   serverWalletAddress: process.env.SERVER_WALLET,
 });
 
-export async function GET(request: Request) {
+export async function POST(request: Request) {
     try {
         // Use this API route itself as the resource URL
         const resourceUrl = request.url;
-
-        // Get network mode and username from query parameters
-        const { searchParams } = new URL(request.url);
-        const networkMode = searchParams.get("network") || "dev";
-        const username = searchParams.get("username");
+        const body = await request.json();
+        const networkMode = body.network || "dev";
+        const username = body.username;
         const network = networkMode === "main" ? monadMainnet : monadTestnet;
 
         // Validate username parameter
         if (!username) {
             return NextResponse.json(
-                { error: "Username parameter is required" },
+                { error: "Username parameter is required in request body" },
                 { status: 400 }
             );
         }
@@ -48,7 +46,7 @@ export async function GET(request: Request) {
 
         const result = await settlePayment({
             resourceUrl: resourceUrl,
-            method: "GET",
+            method: "POST",
             paymentData: paymentData,
             network: network, // payable on monad testnet or mainnet
             price: "$0.0001", // Amount per request

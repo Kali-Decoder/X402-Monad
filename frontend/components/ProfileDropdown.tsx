@@ -6,8 +6,6 @@ import { useNetwork } from '../app/contexts/NetworkContext';
 import { formatUnits } from 'viem';
 import { Button } from '@/components/ui/button';
 import { User } from 'lucide-react';
-
-// ERC20 ABI for balanceOf and decimals
 const ERC20_ABI = [
   {
     inputs: [{ internalType: "address", name: "account", type: "address" }],
@@ -99,7 +97,7 @@ export function ProfileDropdown() {
         variant="outline"
         className="border-zinc-800 bg-zinc-900 hover:bg-zinc-800 text-zinc-300 text-xs sm:text-sm px-2 sm:px-3 py-1.5 sm:py-2 h-auto"
       >
-        <User className="w-4 h-4" />
+        <User className="w-10 h-10" />
       </Button>
 
       {isOpen && (
@@ -145,7 +143,7 @@ export function ProfileDropdown() {
             <div>
               <p className="text-xs text-zinc-500 mb-1">Wallet Address</p>
               <p className="text-sm font-mono text-zinc-100 break-all">{address}</p>
-              <p className="text-xs text-zinc-400 mt-1">{formatAddress(address!)}</p>
+              {/* <p className="text-xs text-zinc-400 mt-1">{formatAddress(address!)}</p> */}
             </div>
 
             {/* Divider */}
