@@ -48,7 +48,8 @@ $ anvil
 ### Deploy
 
 ```shell
-$ forge script script/Counter.s.sol:CounterScript --rpc-url <your_rpc_url> --private-key <your_private_key>
+cd contracts8004
+PRIVATE_KEY=0x<your_private_key> forge script script/S8004.s.sol:S8004Script --rpc-url https://testnet-rpc.monad.xyz/ --broadcast
 ```
 
 ### Cast
@@ -64,3 +65,5 @@ $ forge --help
 $ anvil --help
 $ cast --help
 ```
+
+

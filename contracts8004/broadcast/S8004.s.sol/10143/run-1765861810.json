@@ -4,7 +4,7 @@
       "hash": "0xc4e6ec5830f3a81724e0d2c3ff9ce09c77495488bd2d223f28951330742ab84d",
       "transactionType": "CREATE",
       "contractName": "S8004",
-      "contractAddress": "0x0a95c430bf6aa3140a4bf04c8d5982472331008d",
+      "contractAddress": "0x5E6658ac6cBC9b0109C28BED00bC4Af0F0A3f1CD",
       "function": null,
       "arguments": null,
       "transaction": {
@@ -34,7 +34,7 @@
       "effectiveGasPrice": "0x178411b201",
       "from": "0xdaf0182de86f904918db8d07c7340a1efcdf8244",
       "to": null,
-      "contractAddress": "0x0a95c430bf6aa3140a4bf04c8d5982472331008d"
+      "contractAddress": "0x5E6658ac6cBC9b0109C28BED00bC4Af0F0A3f1CD"
     }
   ],
   "libraries": [],

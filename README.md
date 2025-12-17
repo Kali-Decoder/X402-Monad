@@ -9,7 +9,7 @@ X402Monad lets developers list **API-based services** on **Monad Testnet/Mainnet
 ## Smart Contract Deployment
 | Contract Name | Network        | Address                                      | Explorer                                                                                                              |
 | ------------- | -------------- | -------------------------------------------- | --------------------------------------------------------------------------------------------------------------------- |
-| **S8004**     | Monad Testnet | `0x0A95c430Bf6AA3140A4Bf04C8D5982472331008d` | [View on Monad Explorer](https://testnet.monadexplorer.com/address/0x0A95c430Bf6AA3140A4Bf04C8D5982472331008d) |
+| **S8004**     | Monad Testnet | `0x5E6658ac6cBC9b0109C28BED00bC4Af0F0A3f1CD` | [View on Monad Explorer](https://testnet.monadexplorer.com/address/0x5E6658ac6cBC9b0109C28BED00bC4Af0F0A3f1CD) |
 
 ---
 

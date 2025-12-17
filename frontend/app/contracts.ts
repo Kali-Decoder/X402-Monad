@@ -46,9 +46,9 @@ export const monadMainnet = defineChain({
 
 // Contract Configuration
 // Testnet contract address
-export const S8004_ADDRESS_TESTNET = '0x0A95c430Bf6AA3140A4Bf04C8D5982472331008d' as const;
+export const S8004_ADDRESS_TESTNET = '0x5E6658ac6cBC9b0109C28BED00bC4Af0F0A3f1CD' as const;
 // Mainnet contract address (update when deployed)
-export const S8004_ADDRESS_MAINNET = '0x0A95c430Bf6AA3140A4Bf04C8D5982472331008d' as const;
+export const S8004_ADDRESS_MAINNET = '0x5E6658ac6cBC9b0109C28BED00bC4Af0F0A3f1CD' as const;
 
 // Default to testnet for now
 export const S8004_ADDRESS = S8004_ADDRESS_TESTNET;

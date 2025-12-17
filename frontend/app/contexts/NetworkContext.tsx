@@ -20,8 +20,8 @@ export function NetworkProvider({ children }: { children: ReactNode }) {
 
   const chain = mode === "dev" ? monadTestnet : monadMainnet;
   const contractAddress = mode === "dev" 
-    ? "0x0A95c430Bf6AA3140A4Bf04C8D5982472331008d" // Testnet
-    : "0x0A95c430Bf6AA3140A4Bf04C8D5982472331008d"; // Mainnet (update when deployed)
+    ? "0x5E6658ac6cBC9b0109C28BED00bC4Af0F0A3f1CD" // Testnet
+    : "0x5E6658ac6cBC9b0109C28BED00bC4Af0F0A3f1CD"; // Mainnet (update when deployed)
   
   const usdcAddress = mode === "dev"
     ? "0x534b2f3A21130d7a60830c2Df862319e593943A3" // Testnet USDC

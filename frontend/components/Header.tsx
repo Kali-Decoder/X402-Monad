@@ -1,68 +1,18 @@
 'use client';
 
 import { useEffect } from 'react';
-import { useAccount, useConnect, useDisconnect, useChainId, useSwitchChain, useReadContract } from 'wagmi';
+import { useAccount, useConnect, useChainId, useSwitchChain } from 'wagmi';
 import { Button } from '@/components/ui/button';
 import { Wallet } from 'lucide-react';
-import { NetworkModeSwitcher } from './NetworkModeSwitcher';
+import { ProfileDropdown } from './ProfileDropdown';
 import { useNetwork } from '../app/contexts/NetworkContext';
-import { formatUnits } from 'viem';
-
-// ERC20 ABI for balanceOf and decimals
-const ERC20_ABI = [
-  {
-    inputs: [{ internalType: "address", name: "account", type: "address" }],
-    name: "balanceOf",
-    outputs: [{ internalType: "uint256", name: "", type: "uint256" }],
-    stateMutability: "view",
-    type: "function",
-  },
-  {
-    inputs: [],
-    name: "decimals",
-    outputs: [{ internalType: "uint8", name: "", type: "uint8" }],
-    stateMutability: "view",
-    type: "function",
-  },
-] as const;
 
 export function Header() {
-  const { address, isConnected } = useAccount();
+  const { isConnected } = useAccount();
   const { connect, connectors } = useConnect();
-  const { disconnect } = useDisconnect();
   const chainId = useChainId();
   const { switchChain } = useSwitchChain();
-  const { mode, chain, usdcAddress } = useNetwork();
-
-  // Fetch USDC balance
-  const { data: usdcBalance, isLoading: isLoadingBalance } = useReadContract({
-    address: usdcAddress as `0x${string}`,
-    abi: ERC20_ABI,
-    functionName: "balanceOf",
-    args: address ? [address] : undefined,
-    query: {
-      enabled: !!address && isConnected,
-    },
-  });
-
-  // Fetch USDC decimals
-  const { data: decimals } = useReadContract({
-    address: usdcAddress as `0x${string}`,
-    abi: ERC20_ABI,
-    functionName: "decimals",
-    query: {
-      enabled: !!usdcAddress,
-    },
-  });
-
-  // Format USDC balance
-  const formattedBalance = usdcBalance && decimals
-    ? parseFloat(formatUnits(usdcBalance, decimals)).toFixed(4)
-    : "0.0000";
-
-  const formatAddress = (addr: string) => {
-    return `${addr.slice(0, 6)}...${addr.slice(-4)}`;
-  };
+  const { mode, chain } = useNetwork();
 
   // Switch chain when mode changes
   useEffect(() => {
@@ -93,34 +43,8 @@ export function Header() {
           </div>
 
           <div className="flex flex-wrap items-center gap-2 sm:gap-3 w-full sm:w-auto justify-end">
-            <NetworkModeSwitcher />
             {isConnected ? (
-              <div className="flex flex-wrap items-center gap-2 sm:gap-3">
-                {/* USDC Balance Display */}
-                <div className="px-2 sm:px-3 py-1.5 sm:py-2 rounded-lg bg-zinc-900 border border-zinc-800">
-                  {isLoadingBalance ? (
-                    <div className="flex items-center gap-1.5 sm:gap-2">
-                      <div className="w-2.5 h-2.5 sm:w-3 sm:h-3 border-2 border-zinc-600 border-t-zinc-300 rounded-full animate-spin"></div>
-                      <p className="text-[10px] sm:text-xs text-zinc-500">Loading...</p>
-                    </div>
-                  ) : (
-                    <div className="flex items-center gap-1.5 sm:gap-2">
-                      <p className="text-[10px] sm:text-xs text-zinc-500">USDC:</p>
-                      <p className="text-xs sm:text-sm font-semibold text-zinc-100">{formattedBalance}</p>
-                    </div>
-                  )}
-                </div>
-                <div className="px-2 sm:px-3 py-1.5 sm:py-2 rounded-lg bg-zinc-900 border border-zinc-800 hidden sm:block">
-                  <p className="text-xs sm:text-sm text-zinc-400">{formatAddress(address!)}</p>
-                </div>
-                <Button
-                  onClick={() => disconnect()}
-                  variant="outline"
-                  className="border-zinc-800 bg-zinc-900 hover:bg-zinc-800 text-zinc-300 text-xs sm:text-sm px-3 sm:px-4 py-1.5 sm:py-2 h-auto"
-                >
-                  Disconnect
-                </Button>
-              </div>
+              <ProfileDropdown />
             ) : (
               <Button
                 onClick={() => connect({ connector: connectors[0] })}
