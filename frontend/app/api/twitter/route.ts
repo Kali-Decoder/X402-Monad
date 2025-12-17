@@ -4,6 +4,9 @@ import { monadTestnet } from "thirdweb/chains";
 import { NextResponse } from "next/server";
 import { monadMainnet } from "@/app/utils/chains";
 
+// Mark this route as dynamic since it uses request.url
+export const dynamic = 'force-dynamic';
+
 if (!process.env.SECRET_KEY) {
     throw new Error("SECRET_KEY environment variable is not set");
 }
