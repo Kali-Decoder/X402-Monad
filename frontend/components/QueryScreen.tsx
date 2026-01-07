@@ -1,5 +1,4 @@
 "use client";
-
 import { useState, useEffect } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -15,7 +14,7 @@ import { useNetwork } from "../app/contexts/NetworkContext";
 import { formatUnits } from "viem";
 
 const client = createThirdwebClient({
-  clientId: process.env.NEXT_PUBLIC_CLIENT_ID || "YOUR_PUBLIC_CLIENT_ID",
+  clientId: process.env.NEXT_PUBLIC_CLIENT_ID || "d8952cc43bdc05f754fda42352f63c11",
 });
 
 const PAYMENT_AMOUNT = "$0.0001";
@@ -48,7 +47,7 @@ const ERC20_ABI = [
 
 export function QueryScreen({ agent, onClose }: QueryScreenProps) {
   const { isConnected, address } = useAccount();
-  const { mode, usdcAddress } = useNetwork();
+  const { mode, usdcAddress, chain } = useNetwork();
   const [paymentState, setPaymentState] = useState<PaymentState>("idle");
   const [response, setResponse] = useState<any>(null);
   const [error, setError] = useState<string | null>(null);
@@ -127,43 +126,56 @@ export function QueryScreen({ agent, onClose }: QueryScreenProps) {
     setResponse(null);
 
     try {
-      // Create a thirdweb wallet instance for x402 payments
-      // This uses the same wallet that's already connected via wagmi
+      // Connect wallet for payment
       const wallet = createWallet("io.metamask");
-      await wallet.connect({ client });
+      const account = await wallet.connect({ client });
+      
+      if (!account) {
+        throw new Error("Failed to connect wallet");
+      }
 
       setPaymentState("paying");
       setLoadingPercentage(0);
-
+      
+      // Wrap fetch with payment - wrapFetchWithPayment automatically handles:
+      // 1. Making the initial request
+      // 2. Detecting 402 Payment Required responses
+      // 3. Handling payment flow (signature, settlement)
+      // 4. Retrying the request with x-payment header
+      // 5. Returning the final response
       const fetchPay = wrapFetchWithPayment(fetch, client, wallet);
 
-      // Determine HTTP method and request configuration based on endpoint
-      const isPremiumEndpoint = endpointUrl.includes("/api/premium");
+      // Convert relative URL to absolute URL (required for x402)
+      // Normalize URL to ensure it starts with /
+      let requestPath = endpointUrl.startsWith("/") ? endpointUrl : `/${endpointUrl}`;
+      
+      // Get the base URL (works for both dev and production)
+      const baseUrl = typeof window !== "undefined" ? window.location.origin : "http://localhost:3000";
+      
+      // Determine request method and configuration
+      const isPremiumEndpoint = requestPath.includes("/api/premium");
       
       let res: Response;
       
       if (isPremiumEndpoint) {
-        // /api/premium uses GET with query parameters
-        const queryUrl = `${endpointUrl}?network=${mode}`;
-        res = await fetchPay(queryUrl); // GET request
+        // GET request with query params - network parameter included
+        // Use absolute URL for x402 payment flow
+        const absoluteUrl = `${baseUrl}${requestPath}?network=${mode}`;
+        res = await fetchPay(absoluteUrl);
       } else {
-        // Other endpoints (e.g., /api/twitter) use POST with body
-        const requestBody: { network: string; username?: string } = {
+        // POST request with body - network parameter in body
+        // Use absolute URL for x402 payment flow
+        const absoluteUrl = `${baseUrl}${requestPath}`;
+        const body = JSON.stringify({
           network: mode,
-        };
+          ...(username && { username }),
+        });
         
-        // Add username if provided
-        if (username) {
-          requestBody.username = username;
-        }
-        
-        res = await fetchPay(endpointUrl, {
+        res = await fetchPay(absoluteUrl, {
           method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify(requestBody),
-        }); // POST request with body
+          headers: { "Content-Type": "application/json" },
+          body,
+        });
       }
       
       // Ensure percentage reaches 100% before showing result
@@ -172,27 +184,42 @@ export function QueryScreen({ agent, onClose }: QueryScreenProps) {
       // Small delay to show 100% completion
       await new Promise(resolve => setTimeout(resolve, 200));
       
-      // Always parse the response as JSON, whether it's success or error
-      const json = await res.json().catch(() => ({}));
+      // Parse the response as JSON
+      let json: any;
+      try {
+        const responseText = await res.text();
+        json = responseText ? JSON.parse(responseText) : {};
+      } catch (parseError) {
+        throw new Error(`Failed to parse response: ${parseError instanceof Error ? parseError.message : "Unknown error"}`);
+      }
       
       // Store the full response
       setResponse(json);
       
       // Check if response has an error field
       if (!res.ok || json.error) {
-        setError(json.errorMessage || json.error || `Query failed with status ${res.status}`);
-        setPaymentState("error");
+        // Handle timeout errors specially - they're retryable
+        if (json.error === "Payment settlement timeout" || res.status === 408) {
+          setError(
+            json.errorMessage || 
+            "Payment settlement timed out. This is usually temporary. Please try again."
+          );
+          setPaymentState("error");
+        } else {
+          setError(json.errorMessage || json.error || `Query failed with status ${res.status}`);
+          setPaymentState("error");
+        }
       } else {
         setPaymentState("success");
       }
-    } catch (e: any) {
-      // If we can't parse JSON, create a response object with the error
+    } catch (e: unknown) {
+      const msg = e instanceof Error ? e.message : "Unknown error";
       const errorResponse = {
         error: "request_failed",
-        errorMessage: e.message || "Failed to query agent",
+        errorMessage: msg,
       };
       setResponse(errorResponse);
-      setError(e.message || "Failed to query agent");
+      setError(msg);
       setPaymentState("error");
     }
   };
@@ -478,8 +505,15 @@ export function QueryScreen({ agent, onClose }: QueryScreenProps) {
 
             {error && paymentState === "error" && (
               <div className="p-3 xs:p-4 rounded-lg bg-zinc-800/50 border border-zinc-700 animate-in slide-in-from-top duration-300">
-                <p className="text-zinc-200 font-semibold mb-1.5 xs:mb-2 text-sm xs:text-base">Payment Error</p>
+                <p className="text-zinc-200 font-semibold mb-1.5 xs:mb-2 text-sm xs:text-base">
+                  {response?.retryable ? "Payment Timeout (Retryable)" : "Payment Error"}
+                </p>
                 <p className="text-zinc-400 text-xs xs:text-sm break-words">{error}</p>
+                {response?.retryable && (
+                  <p className="text-zinc-500 text-[10px] xs:text-xs mt-1.5 xs:mt-2">
+                    This is usually a temporary issue. Please try again.
+                  </p>
+                )}
                 {response?.fundWalletLink && (
                   <a
                     href={response.fundWalletLink}
@@ -495,7 +529,7 @@ export function QueryScreen({ agent, onClose }: QueryScreenProps) {
                   className="mt-2 xs:mt-3 w-full bg-zinc-800 hover:bg-zinc-700 text-zinc-200 text-xs xs:text-sm h-9 xs:h-10"
                   size="sm"
                 >
-                  Try Again
+                  {response?.retryable ? "Retry Payment" : "Try Again"}
                 </Button>
               </div>
             )}

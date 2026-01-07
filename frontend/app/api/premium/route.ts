@@ -1,11 +1,7 @@
+import { NextResponse } from "next/server";
 import { createThirdwebClient } from "thirdweb";
 import { facilitator, settlePayment } from "thirdweb/x402";
 import { monadTestnet } from "thirdweb/chains";
-import { NextResponse } from "next/server";
-import { monadMainnet } from "@/app/utils/chains";
-
-// Mark this route as dynamic since it uses request.url
-export const dynamic = 'force-dynamic';
 
 if (!process.env.SECRET_KEY) {
     throw new Error("SECRET_KEY environment variable is not set");
@@ -17,7 +13,7 @@ if (!process.env.SERVER_WALLET) {
 
 // Facilitator requires one of: vaultAccessToken, walletAccessToken, or awsKms credentials
 // Get these from your thirdweb dashboard: https://portal.thirdweb.com
-if (!process.env.VAULT_ACCESS_TOKEN) {
+if (!process.env.VAULT_ACCESS_TOKEN && !process.env.WALLET_ACCESS_TOKEN && !process.env.AWS_KMS_KEY_ID) {
     throw new Error("Facilitator requires one of: VAULT_ACCESS_TOKEN, WALLET_ACCESS_TOKEN, or AWS_KMS_KEY_ID environment variable");
 }
 
@@ -27,6 +23,7 @@ const client = createThirdwebClient({ secretKey: process.env.SECRET_KEY });
 const facilitatorConfig: any = {
   client,
   serverWalletAddress: process.env.SERVER_WALLET,
+  waitUntil: "confirmed", // Wait for on-chain confirmation to get tx details
 };
 
 // Add authentication method (priority: vault > wallet > awsKms)
@@ -43,104 +40,55 @@ if (process.env.VAULT_ACCESS_TOKEN) {
   };
 }
 
-const twFacilitator = facilitator(facilitatorConfig);
+const thirdwebX402Facilitator = facilitator(facilitatorConfig);
 
 export async function GET(request: Request) {
     try {
-        // Use this API route itself as the resource URL
-        const resourceUrl = request.url;
-
-        // Get network mode from query parameter (defaults to testnet for dev mode)
-        const { searchParams } = new URL(request.url);
-        const networkMode = searchParams.get("network") || "dev";
-        const network = networkMode === "main" ? monadMainnet : monadTestnet;
-
         const paymentData = request.headers.get("x-payment");
-        console.log("paymentData", paymentData);
-        console.log("networkMode", networkMode, "network", network.name);
 
         const result = await settlePayment({
-            resourceUrl: resourceUrl,
+            resourceUrl: "http://localhost:3000/api/premium", // change to your production URL
             method: "GET",
-            paymentData: paymentData,
-            network: network, // payable on monad testnet or mainnet
+            paymentData,
+            network: monadTestnet, // payable on monad testnet
             price: "$0.0001", // Amount per request
             payTo: process.env.SERVER_WALLET!, // payment receiver
-            facilitator: twFacilitator,
+            facilitator: thirdwebX402Facilitator,
         });
 
         if (result.status === 200) {
-            // If payment is settled, return paid response
-            return NextResponse.json({ 
-                message: "Paid! Monad is blazing fast ⚡", 
-                tx: result.paymentReceipt 
+            // Log the full payment receipt to see all available fields
+            console.log("=== Payment Receipt ===");
+            console.log(JSON.stringify(result.paymentReceipt, null, 2));
+            console.log("=== Full Result ===");
+            console.log(JSON.stringify(result, null, 2));
+
+            // Return paid response with full receipt
+            return NextResponse.json({
+                message: "Payment successful!",
+                receipt: result.paymentReceipt,
+                // Include any other fields from result that might have tx info
+                settledAt: new Date().toISOString(),
             });
         } else {
-            // Check if it's a timeout error
-            const responseBody = result.responseBody || {};
-            const errorMessage = responseBody.errorMessage || JSON.stringify(responseBody);
-            
-            // Detect timeout errors (524, 504, or timeout-related messages in error message)
-            const isTimeoutError = 
-                errorMessage.includes('524') ||
-                errorMessage.includes('504') ||
-                errorMessage.includes('timeout') ||
-                errorMessage.includes('Timeout') ||
-                errorMessage.includes('A timeout occurred');
-
-            if (isTimeoutError) {
-                console.error("Payment settlement timeout:", errorMessage);
-                return NextResponse.json({
-                    error: "Payment settlement timeout",
-                    errorMessage: "The payment settlement request timed out. This may be due to network issues or thirdweb API delays. Please try again in a few moments.",
-                    retryable: true,
-                    accepts: responseBody.accepts || [],
-                }, {
-                    status: 408, // Request Timeout
-                    headers: { "Content-Type": "application/json" },
-                });
-            }
-
-            // send payment status for other errors
+            // send payment status
             return new NextResponse(
-                JSON.stringify(result.responseBody),
+            JSON.stringify(result.responseBody),
                 {
                     status: result.status,
                     headers: { "Content-Type": "application/json", ...(result.responseHeaders || {}) },
                 }
             );
         }
-    } catch(error: any) {
-        console.error("Payment settlement error:", error);
+    } catch(error) {
+        console.error(error);
         
-        // Check if it's a timeout error
-        const errorMessage = error?.message || String(error);
-        const isTimeoutError = 
-            errorMessage.includes('524') ||
-            errorMessage.includes('504') ||
-            errorMessage.includes('timeout') ||
-            errorMessage.includes('Timeout') ||
-            errorMessage.includes('ECONNRESET') ||
-            errorMessage.includes('ETIMEDOUT');
-
-        if (isTimeoutError) {
-            return NextResponse.json({
-                error: "Payment settlement timeout",
-                errorMessage: "The payment settlement request timed out. This may be due to network issues or thirdweb API delays. Please try again in a few moments.",
-                retryable: true,
-            }, {
-                status: 408, // Request Timeout
+        return new NextResponse(
+            JSON.stringify({ error: "server error" }),
+            {
+                status: 500,
                 headers: { "Content-Type": "application/json" },
-            });
-        }
-        
-        return NextResponse.json({
-            error: "server error",
-            errorMessage: errorMessage,
-        }, {
-            status: 500,
-            headers: { "Content-Type": "application/json" },
-        });
+            }
+        );
     }
 }
-

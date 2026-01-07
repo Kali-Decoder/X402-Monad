@@ -21,7 +21,7 @@ if (!process.env.RAPIDAPI_KEY) {
 
 // Facilitator requires one of: vaultAccessToken, walletAccessToken, or awsKms credentials
 // Get these from your thirdweb dashboard: https://portal.thirdweb.com
-if (!process.env.VAULT_ACCESS_TOKEN ) {
+if (!process.env.VAULT_ACCESS_TOKEN && !process.env.WALLET_ACCESS_TOKEN && !process.env.AWS_KMS_KEY_ID) {
     throw new Error("Facilitator requires one of: VAULT_ACCESS_TOKEN, WALLET_ACCESS_TOKEN, or AWS_KMS_KEY_ID environment variable");
 }
 
@@ -31,6 +31,7 @@ const client = createThirdwebClient({ secretKey: process.env.SECRET_KEY });
 const facilitatorConfig: any = {
   client,
   serverWalletAddress: process.env.SERVER_WALLET,
+  waitUntil: "sent", // Use "sent" instead of "confirmed" to avoid timeouts on Monad
 };
 
 // Add authentication method (priority: vault > wallet > awsKms)
@@ -51,8 +52,9 @@ const twFacilitator = facilitator(facilitatorConfig);
 
 export async function POST(request: Request) {
     try {
-        // Use this API route itself as the resource URL
-        const resourceUrl = request.url;
+        // Use hardcoded resource URL matching premium route pattern
+        // Change to your production URL when deploying
+        const resourceUrl = "http://localhost:3000/api/twitter";
         const body = await request.json();
         const networkMode = body.network || "dev";
         const username = body.username;
