@@ -137,12 +137,6 @@ export function QueryScreen({ agent, onClose }: QueryScreenProps) {
       setPaymentState("paying");
       setLoadingPercentage(0);
       
-      // Wrap fetch with payment - wrapFetchWithPayment automatically handles:
-      // 1. Making the initial request
-      // 2. Detecting 402 Payment Required responses
-      // 3. Handling payment flow (signature, settlement)
-      // 4. Retrying the request with x-payment header
-      // 5. Returning the final response
       const fetchPay = wrapFetchWithPayment(fetch, client, wallet);
 
       // Convert relative URL to absolute URL (required for x402)
